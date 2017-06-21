@@ -24,7 +24,11 @@ def index():
 
 @app.route('/catalog/<category>/items/')
 def items(category):
-    return 'Welcome to ' + category + ' items!'
+    category = category.title()
+    output = ''
+    for c, i in session.query(Category, Item).filter(Category.name == category).filter(Item.cat_id == Category.id):
+        output += i.name + '<br>'
+    return output
 
 
 @app.route('/catalog/<category>/<item>/')
