@@ -33,7 +33,11 @@ def items(category):
 
 @app.route('/catalog/<category>/<item>/')
 def item(category, item):
-    return 'Welcome %s - %s ' % (category, item)
+    category, item = [category.title(), item.title()]
+    output = ''
+    for c, i in session.query(Category, Item).filter(Category.name == category).filter(Item.name == item):
+        output += i.description + '<br>'
+    return output
 
 
 @app.route('/catalog/<category>/<item>/add')

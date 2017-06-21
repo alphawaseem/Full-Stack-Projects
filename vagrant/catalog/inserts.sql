@@ -25,7 +25,7 @@ INSERT INTO categories (name) VALUES('Foosball');
 INSERT INTO categories (name) VALUES('Skating');
 INSERT INTO categories (name) VALUES('Hockey');
 
-INSERT INTO items (name,cat_id) VALUES('Stick',9);
+INSERT INTO items (name,cat_id,description) VALUES('Stick',9,' A Hockey Stick');
 INSERT INTO items (name,cat_id) VALUES('Googles',5);
 INSERT INTO items (name,cat_id) VALUES('Snowboard',5);
 INSERT INTO items (name,cat_id) VALUES('Two shingaurds',1);
