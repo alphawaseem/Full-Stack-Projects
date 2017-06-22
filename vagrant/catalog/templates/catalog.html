@@ -1,0 +1,11 @@
+{% extends "base.html" %} {% block title %}Catalog - Index{% endblock %} {% block head %} {{ super() }} {% endblock %} {% block main %}
+<h2>Catalog</h2>
+<div class="category fc">
+    {% for cat in categories %}
+    <div class='box'>
+        {{cat.name}}
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

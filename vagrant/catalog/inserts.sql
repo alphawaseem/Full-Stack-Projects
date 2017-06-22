@@ -21,7 +21,7 @@ INSERT INTO categories (name) VALUES('Baseball');
 INSERT INTO categories (name) VALUES('Frisbee');
 INSERT INTO categories (name) VALUES('Snowboarding');
 INSERT INTO categories (name) VALUES('Rock Climbing');
-INSERT INTO categories (name) VALUES('Foosball');
+INSERT INTO categories (name) VALUES('Football');
 INSERT INTO categories (name) VALUES('Skating');
 INSERT INTO categories (name) VALUES('Hockey');
 

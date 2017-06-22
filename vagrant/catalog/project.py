@@ -29,12 +29,15 @@ CLIENT_ID = json.loads(
 @app.route('/')
 @app.route('/catalog/')
 def index():
-    cat = session.query(Category)
-    output = ''
-    for c in cat.all():
-        output += c.name
-        output += '<br>'
-    return output
+    categories = session.query(Category)
+    state = ''.join(random.choice(string.ascii_lowercase +
+                                  string.ascii_uppercase + string.digits) for x in range(32))
+    login_session['state'] = state
+    if 'username' in login_session and 'access_token' in login_session:
+        username = login_session['username']
+    else:
+        username = None
+    return render_template('catalog.html', username=username, categories=categories.all(), STATE=state)
 
 
 @app.route('/catalog/<category>/items/')
@@ -74,9 +77,6 @@ def delete_item():
 
 @app.route('/login/')
 def login():
-    state = ''.join(random.choice(string.ascii_lowercase +
-                                  string.ascii_uppercase + string.digits) for x in range(32))
-    login_session['state'] = state
 
     return render_template('login.html', STATE=state)
 
@@ -141,7 +141,7 @@ def gconnect():
     # Store the access token in the session for later use.
     login_session['credentials'] = credentials
     login_session['gplus_id'] = gplus_id
-    login_session['access_token']= access_token
+    login_session['access_token'] = access_token
 
     # Get user info
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
@@ -166,30 +166,32 @@ def gconnect():
 def logout():
     access_token = login_session['access_token']
     print('In gdisconnect access token is %s', access_token)
-    print('User name is: ' )
+    print('User name is: ')
     print(login_session['username'])
     if access_token is None:
         print('Access Token is None')
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps(
+            'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print('result is ')
-    print (result)
+    print(result)
     if result['status'] == '200':
-        del login_session['access_token'] 
+        del login_session['access_token']
         del login_session['gplus_id']
         del login_session['username']
         del login_session['email']
         del login_session['picture']
         return redirect(url_for('index'))
     else:
-	
-    	response = make_response(json.dumps('Failed to revoke token for given user.', 400))
-    	response.headers['Content-Type'] = 'application/json'
-    	return response
+
+        response = make_response(json.dumps(
+            'Failed to revoke token for given user.', 400))
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 
 if __name__ == '__main__':
