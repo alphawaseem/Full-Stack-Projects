@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, make_response, url_for
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, Item
@@ -55,9 +55,11 @@ def item(category, item):
     return output
 
 
-@app.route('/catalog/<category>/<item>/add')
-def add_item():
-    return 'Add an item'
+@app.route('/catalog/<category>/item/add')
+def add_item(category):
+    if 'username' not in login_session:
+        return redirect(url_for('login'))
+    return 'Hello %s. You are allowed to add items' % login_session['username']
 
 
 @app.route('/catalog/<category>/<item>/edit')
@@ -139,6 +141,7 @@ def gconnect():
     # Store the access token in the session for later use.
     login_session['credentials'] = credentials
     login_session['gplus_id'] = gplus_id
+    login_session['access_token']= access_token
 
     # Get user info
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
@@ -157,6 +160,36 @@ def gconnect():
     output += '<img src="%s" width=75px />' % login_session['picture']
 
     return output
+
+
+@app.route('/logout/')
+def logout():
+    access_token = login_session['access_token']
+    print('In gdisconnect access token is %s', access_token)
+    print('User name is: ' )
+    print(login_session['username'])
+    if access_token is None:
+        print('Access Token is None')
+        response = make_response(json.dumps('Current user not connected.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+    print('result is ')
+    print (result)
+    if result['status'] == '200':
+        del login_session['access_token'] 
+        del login_session['gplus_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+        return redirect(url_for('index'))
+    else:
+	
+    	response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+    	response.headers['Content-Type'] = 'application/json'
+    	return response
 
 
 if __name__ == '__main__':
