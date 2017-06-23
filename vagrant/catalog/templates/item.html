@@ -11,10 +11,10 @@
         </div>
     </div>
     <div class="items center">
-        {% if item %}
-        <h3>{{c_cat.name}} - {{item.name}}</h3>
+        {% if current_item %}
+        <h3>{{current_item.cat.name}} - {{current_item.name}}</h3>
         <div class="fc" style="padding:2%">
-            {{item.description if item.description else 'No Description'}}
+            {{current_item.description if current_item.description else 'No Description'}}
         </div>
         {% else %}
         <h3> Item Not Found</h3>

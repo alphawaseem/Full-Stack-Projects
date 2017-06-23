@@ -43,10 +43,9 @@ def index():
 
 @app.route('/catalog/<category>/items/')
 def items(category):
-    category = category.title()
 
     items = session.query(Item).filter(
-        Category.name == category).filter(Item.cat_id == Category.id)
+        Category.name.ilike(category)).filter(Item.cat_id == Category.id)
     allCat = session.query(Category)
 
     return render_template('catalog.html', categories=allCat.all(), username=login_session['username'], items=items.all(), tittle=category, STATE=login_session['state'])
@@ -54,11 +53,14 @@ def items(category):
 
 @app.route('/catalog/<category>/<item>/')
 def item(category, item):
-    category, item = [category.title(), item.title()]
-    output = ''
-    for c, i in session.query(Category, Item).filter(Category.name == category).filter(Item.name == item):
-        output += i.description + '<br>'
-    return output
+    print(item)
+    all_categories = session.query(Category)
+    result = session.query(Category, Item).filter(
+        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
+    current_item = None
+    if result:
+        current_item = result[0][1]
+    return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session['username'], title=item, STATE=login_session['state'])
 
 
 @app.route('/catalog/<category>/item/add')
