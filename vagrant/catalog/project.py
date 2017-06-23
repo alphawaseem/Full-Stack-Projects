@@ -30,6 +30,7 @@ CLIENT_ID = json.loads(
 @app.route('/catalog/')
 def index():
     categories = session.query(Category)
+    items = session.query(Item)
     state = ''.join(random.choice(string.ascii_lowercase +
                                   string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
@@ -37,16 +38,18 @@ def index():
         username = login_session['username']
     else:
         username = None
-    return render_template('catalog.html', username=username, categories=categories.all(), STATE=state)
+    return render_template('catalog.html', username=username, categories=categories.all(), items=items.all()[:10], STATE=state)
 
 
 @app.route('/catalog/<category>/items/')
 def items(category):
     category = category.title()
-    output = ''
-    for c, i in session.query(Category, Item).filter(Category.name == category).filter(Item.cat_id == Category.id):
-        output += i.name + '<br>'
-    return output
+
+    items = session.query(Item).filter(
+        Category.name == category).filter(Item.cat_id == Category.id)
+    allCat = session.query(Category)
+
+    return render_template('catalog.html', categories=allCat.all(), username=login_session['username'], items=items.all(), tittle=category, STATE=login_session['state'])
 
 
 @app.route('/catalog/<category>/<item>/')

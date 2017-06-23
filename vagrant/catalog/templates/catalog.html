@@ -1,11 +1,34 @@
-{% extends "base.html" %} {% block title %}Catalog - Index{% endblock %} {% block head %} {{ super() }} {% endblock %} {% block main %}
-<h2>Catalog</h2>
-<div class="category fc">
-    {% for cat in categories %}
-    <div class='box'>
-        {{cat.name}}
+{% extends "base.html" %} {% block title %}Catalog - {{title if title else 'Index'}}{% endblock %} {% block head %} {{ super() }} {% endblock %} {% block main %}
+
+<div class="fc">
+    <div class="category">
+        <h3>Categories</h3>
+        <div class="fc">
+            {% for cat in categories %}
+            <a class=box href="/catalog/{{cat.name}}/items">
+                {{cat.name}}
+            </a> {% endfor %}
+        </div>
     </div>
-    {% endfor %}
+    <div class="items center">
+        <h3>Items</h3>
+        {% if items %}
+        <div class="fc" style="padding:2%">
+
+            {% for item in items %}
+
+            <a class="box" href="/catalog/{{item.cat.name}}/{{item.name}}">
+                
+                    {{item.name}}
+               
+            </a> {% endfor %}
+        </div>
+        {% else %}
+        <h3> No Items to display</h3>
+        {% endif %}
+
+
+    </div>
 </div>
 
 {% endblock %}

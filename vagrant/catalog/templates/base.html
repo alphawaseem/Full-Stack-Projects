@@ -14,7 +14,7 @@
         
         body {
             height: 100vh;
-            color: white;
+            color: purple;
         }
         
         header,
@@ -22,6 +22,7 @@
             min-height: 10%;
             background-image: linear-gradient(to right, teal, purple);
             text-align: center;
+            color: white;
         }
         
         main {
@@ -37,7 +38,6 @@
         
         .fc>* {
             flex: 1;
-            flex-basis: 40%;
         }
         
         .box {
@@ -51,6 +51,14 @@
             word-wrap: break-word;
         }
         
+        a,
+        a:link,
+        a:visited,
+        a:active {
+            text-decoration: none;
+            color: white;
+        }
+        
         .box:hover {
             background: purple;
             color: white;
@@ -58,10 +66,14 @@
         }
         
         .category {
-            width: 20%;
+            max-width: 20%;
             height: 100%;
             padding-right: 2%;
             border-right: 5px solid palevioletred;
+        }
+        
+        .center {
+            text-align: center;
         }
     </style>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js">
@@ -85,7 +97,7 @@
         </div>
         {% else %}
         <h3>Hello , {{username}} </h3>
-        {% endif %}
+        <a href="/logout" class="box"> Sign Out </a> {% endif %}
     </header>
     <main>
         <div id="result"></div>
