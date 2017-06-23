@@ -59,11 +59,28 @@ def item(category, item):
     return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session['state'])
 
 
-@app.route('/catalog/<category>/item/add')
-def add_item(category):
-    if 'username' not in login_session:
-        return redirect(url_for('login'))
-    return 'Hello %s. You are allowed to add items' % login_session.get('username')
+@app.route('/catalog/item/add', methods = ['GET','POST'])
+def add_item():
+    if not login_session.get('username'):
+        return redirect(url_for('index'))
+    categories = session.query(Category)
+    cat = session.query(Category).filter(Category.name.ilike('category')).first()
+    # if not cat:
+    #     return 'Category not supported'
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+        cat_id = request.form.get('category')
+        item = Item(name=name,cat_id = cat_id , description = description)
+        session.add(item)
+        session.commit()
+        return redirect(url_for('index'))
+
+    else:
+        pass
+    return render_template('add.html', categories = categories.all(),STATE=login_session.get('state'),username=login_session.get('username'))
+
 
 
 @app.route('/catalog/<category>/<item>/edit')

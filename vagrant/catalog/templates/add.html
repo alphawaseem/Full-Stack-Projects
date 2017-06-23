@@ -1,0 +1,27 @@
+{% extends "base.html" %} {% block title %}Catalog - {{title if title else 'Index'}}{% endblock %} {% block head %} {{ super() }} {% endblock %} {% block main %}
+
+<div class="fc">
+    <div class="category">
+        <h3>Categories</h3>
+        <div class="fc">
+            {% for cat in categories %}
+            <a class=box href="/catalog/{{cat.name}}/items">
+                {{cat.name}}
+            </a> {% endfor %}
+        </div>
+    </div>
+    <form action="/catalog/item/add" method="POST">
+        <label for='name'> Name : <input type="text" id="name" name="name"> </label>
+        <label for='description'> Description : <input type="text" id="description" name="description"> </label>
+        <label for="category"> Category: <select id="category" name="category">   
+            {% for cat in categories %}
+            <option value="{{cat.id}}">{{cat.name}}</option>
+            {% endfor %}
+        </select>
+        </label>
+        <input type="submit" value="Add">
+
+    </form>
+</div>
+
+{% endblock %}
