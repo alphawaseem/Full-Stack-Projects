@@ -34,11 +34,7 @@ def index():
     state = ''.join(random.choice(string.ascii_lowercase +
                                   string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
-    if 'username' in login_session and 'access_token' in login_session:
-        username = login_session['username']
-    else:
-        username = None
-    return render_template('catalog.html', username=username, categories=categories.all(), items=items.all()[:10], STATE=state)
+    return render_template('catalog.html', username=login_session.get('username'), categories=categories.all(), items=items.all()[:10], STATE=state)
 
 
 @app.route('/catalog/<category>/items/')
@@ -48,7 +44,7 @@ def items(category):
         Category.name.ilike(category)).filter(Item.cat_id == Category.id)
     allCat = session.query(Category)
 
-    return render_template('catalog.html', categories=allCat.all(), username=login_session['username'], items=items.all(), tittle=category, STATE=login_session['state'])
+    return render_template('catalog.html', categories=allCat.all(), username=login_session.get('username'), items=items.all(), tittle=category, STATE=login_session['state'])
 
 
 @app.route('/catalog/<category>/<item>/')
@@ -60,14 +56,14 @@ def item(category, item):
     current_item = None
     if result:
         current_item = result[0][1]
-    return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session['username'], title=item, STATE=login_session['state'])
+    return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session['state'])
 
 
 @app.route('/catalog/<category>/item/add')
 def add_item(category):
     if 'username' not in login_session:
         return redirect(url_for('login'))
-    return 'Hello %s. You are allowed to add items' % login_session['username']
+    return 'Hello %s. You are allowed to add items' % login_session.get('username')
 
 
 @app.route('/catalog/<category>/<item>/edit')
@@ -78,12 +74,6 @@ def edit_item():
 @app.route('/catalog/<category>/<item>/delete')
 def delete_item():
     return 'Delete an item'
-
-
-@app.route('/login/')
-def login():
-
-    return render_template('login.html', STATE=state)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -161,7 +151,7 @@ def gconnect():
     login_session['email'] = data['email']
 
     output = ''
-    output += '<h1>Welcome %s </h1>' % login_session['username']
+    output += '<h1>Welcome %s </h1>' % login_session.get('username')
     output += '<img src="%s" width=75px />' % login_session['picture']
 
     return output
@@ -172,7 +162,7 @@ def logout():
     access_token = login_session['access_token']
     print('In gdisconnect access token is %s', access_token)
     print('User name is: ')
-    print(login_session['username'])
+    print(login_session.get('username'))
     if access_token is None:
         print('Access Token is None')
         response = make_response(json.dumps(
@@ -192,7 +182,6 @@ def logout():
         del login_session['picture']
         return redirect(url_for('index'))
     else:
-
         response = make_response(json.dumps(
             'Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
