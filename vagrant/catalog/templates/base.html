@@ -15,6 +15,8 @@
         body {
             height: 100vh;
             color: purple;
+            font-size: 1.2rem;
+            line-height: 1.5rem;
         }
         
         header,
@@ -90,6 +92,12 @@
         .center {
             text-align: center;
         }
+        
+        h1 {
+            cursor: pointer;
+            font-size: 4rem;
+            padding: 5%;
+        }
     </style>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js">
     </script>
@@ -103,7 +111,7 @@
 
 <body>
     <header>
-        <h1>UdaCataLog</h1>
+        <h1 onclick="window.location.href='/'">UdaCataLog</h1>
         {% if not username %}
         <div id="signInButton">
             <span class="g-signin" data-scope="openid email" data-clientid="246430984125-hdtbv87ckoscqptrau69mtni4ik4ipk7.apps.googleusercontent.com" data-redirecturi="postmessage" data-accesstype="offline" data-cookiepolicy="single_host_origin" data-callback="signInCallback"
