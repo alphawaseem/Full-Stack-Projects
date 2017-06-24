@@ -12,7 +12,6 @@ from oauth2client.client import FlowExchangeError
 from oauth2client.client import OAuth2Credentials
 import httplib2
 import json
-from flask import make_response
 import requests
 
 engine = create_engine('postgresql://vagrant:password@localhost:5432/catalogs')
