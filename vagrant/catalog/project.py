@@ -49,7 +49,6 @@ def items(category):
 
 @app.route('/catalog/<category>/<item>/')
 def item(category, item):
-    print(item)
     all_categories = session.query(Category)
     result = session.query(Category, Item).filter(
         Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
@@ -59,34 +58,70 @@ def item(category, item):
     return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session['state'])
 
 
-@app.route('/catalog/item/add', methods = ['GET','POST'])
+@app.route('/catalog/item/add', methods=['GET', 'POST'])
 def add_item():
     if not login_session.get('username'):
         return redirect(url_for('index'))
     categories = session.query(Category)
-    cat = session.query(Category).filter(Category.name.ilike('category')).first()
-    # if not cat:
-    #     return 'Category not supported'
-
     if request.method == 'POST':
-        name = request.form.get('name')
-        description = request.form.get('description')
-        cat_id = request.form.get('category')
-        item = Item(name=name,cat_id = cat_id , description = description)
-        session.add(item)
-        session.commit()
+        name, description, cat_id , valid_category = extract_form_data()
+        if valid_category and name and cat_id:
+            item = Item(name=name, cat_id=cat_id, description=description)
+            session.add(item)
+            session.commit()
+        return redirect(url_for('index'))
+    return render_template('add.html', categories=categories.all(), STATE=login_session.get('state'), username=login_session.get('username'))
+
+
+@app.route('/catalog/<category>/<item>/edit/')
+def edit_item(category, item):
+    if not login_session.get('username'):
+        return redirect(url_for('index'))
+    categories = session.query(Category)
+    result = session.query(Category, Item).filter(
+        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
+    current_item = None
+    if result:
+        current_item = result[0][1]
+    else:
         return redirect(url_for('index'))
 
+    return render_template('edit.html', item=current_item, categories=categories.all(), STATE=login_session.get('state'), username=login_session.get('username'))
+
+
+@app.route('/catalog/item/edit/', methods=['POST'])
+def save_item():
+    if not login_session.get('username'):
+        return redirect(url_for('index'))
+    if request.method == 'GET':
+        return redirect(url_for('index'))
+    id = request.form.get('id')
+    item = session.query(Item).filter(Item.id == id).first()
+    if item:
+        name, description, cat_id , valid_category = extract_form_data()
+        if valid_category and name and cat_id:  
+            item.name = name
+            item.description = description
+            item.cat_id = cat_id
+            session.add(item)
+            session.commit()
+            return redirect('/catalog/%s/%s/' % (item.cat.name, item.name))
+        else:
+            return redirect(url_for('index'))            
     else:
-        pass
-    return render_template('add.html', categories = categories.all(),STATE=login_session.get('state'),username=login_session.get('username'))
+        return redirect(url_for('index'))
 
-
-
-@app.route('/catalog/<category>/<item>/edit')
-def edit_item():
-    return 'Edit an item'
-
+def extract_form_data():
+    valid_category = False    
+    name = request.form.get('name')
+    description = request.form.get('description')
+    cat_id = request.form.get('category')
+    cat = session.query(Category).filter(Category.id == cat_id).first()
+    if cat:
+        valid_category = True
+    
+    return name, description, cat_id,valid_category
+    
 
 @app.route('/catalog/<category>/<item>/delete')
 def delete_item():
