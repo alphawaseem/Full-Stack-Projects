@@ -136,6 +136,7 @@ def delete_item(category, item):
     if result:
         current_item = result[0][1]
         session.delete(current_item)
+        session.commit()
         message = 'Item deleted'
     return render_template('delete.html', categories=categories, STATE=login_session.get('state'), message=message, username=login_session.get('username'))
 
