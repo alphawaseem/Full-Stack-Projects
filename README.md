@@ -25,10 +25,11 @@
 ## JSON Endpoints
 1. /catalog/json/
 2. /catalog/categories/json/
-3. /catalog/<category>/json/
-4. /catalog/<category>/items/json/
-5. /catalog/<category>/<item>/json/
-6. /catalog/category/<id>/json/
-7. /catalog/item/<id>/json/
+3. /catalog/#category#/json/
+4. /catalog/#category#/items/json/
+5. /catalog/#category#/#item#/json/
+6. /catalog/category/#id#/json/
+7. /catalog/item/#id#/json/
+> Replace #...# with desired parameters
 
 Common code for the Relational Databases and Full Stack Fundamentals courses
