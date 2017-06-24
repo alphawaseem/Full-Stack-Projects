@@ -77,8 +77,12 @@ def add_item():
 
     # If request was post method then extract form data, and add item to db
     if request.method == 'POST':
-        name, description, cat_id, valid_category = extract_form_data()
-        if valid_category and name and cat_id:
+        name, description, cat_id = extract_form_data()
+        
+        # Check if name, cat_id are not empty and also check if category exists
+        # before adding/editing
+        cat = get_category_by_id(cat_id)
+        if cat and name and cat_id:
             item = Item(name=name, cat_id=cat_id, description=description)
             add_item_todb(item)
         return redirect(url_for('index'))
@@ -118,8 +122,12 @@ def save_item():
 
     # If item is found then extract form data and update the item
     if item:
-        name, description, cat_id, valid_category = extract_form_data()
-        if valid_category and name and cat_id:
+        name, description, cat_id = extract_form_data()
+
+        # Check if name, cat_id are not empty and also check if category exists
+        # before adding/editing
+        cat = get_category_by_id(cat_id)
+        if cat and name and cat_id:
             item.name = name
             item.description = description
             item.cat_id = cat_id
@@ -281,16 +289,11 @@ def logout():
 
 def extract_form_data():
     ''''Helper function which extracts form data required to add item'''
-    valid_category = False
     name = request.form.get('name')
     description = request.form.get('description')
     cat_id = request.form.get('category')
-    cat = get_category_by_id(cat_id)
-    if cat:
-        valid_category = True
 
-    return name, description, cat_id, valid_category
-
+    return name, description, cat_id
 
 if __name__ == '__main__':
     app.debug = True
