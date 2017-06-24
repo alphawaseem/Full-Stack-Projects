@@ -223,7 +223,7 @@ def gconnect():
 
 @app.route('/logout/')
 def logout():
-    access_token = login_session['access_token']
+    access_token = login_session.get('access_token')
     print('In gdisconnect access token is %s', access_token)
     print('User name is: ')
     print(login_session.get('username'))
