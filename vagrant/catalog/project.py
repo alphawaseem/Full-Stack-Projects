@@ -28,8 +28,8 @@ CLIENT_ID = json.loads(
 @app.route('/')
 @app.route('/catalog/')
 def index():
-    categories = session.query(Category).all()
-    items = session.query(Item).all()[:10]
+    categories = get_all_categories()
+    items =get_all_items()[0:11]
     if not login_session.get('state'):
         state = ''.join(random.choice(string.ascii_lowercase +
                                       string.ascii_uppercase + string.digits) for x in range(32))
@@ -40,71 +40,57 @@ def index():
 @app.route('/catalog/<category>/items/')
 def items(category):
 
-    items = session.query(Item).filter(
-        Category.name.ilike(category)).filter(Item.cat_id == Category.id)
-    allCat = session.query(Category)
+    items = get_items_by_category(category)
+    allCat = get_all_categories()
 
-    return render_template('catalog.html', categories=allCat.all(), username=login_session.get('username'), items=items.all(), tittle=category, STATE=login_session['state'])
+    return render_template('catalog.html', categories=allCat, username=login_session.get('username'), items=items, tittle=category, STATE=login_session.get('state'))
 
 
 @app.route('/catalog/<category>/<item>/')
 def item(category, item):
-    all_categories = session.query(Category)
-    result = session.query(Category, Item).filter(
-        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
-    current_item = None
-    if result:
-        current_item = result[0][1]
-    return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session['state'])
+    all_categories = get_all_categories()
+    current_item = get_item_by_name_and_category(category,item)
+    return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session.get('state'))
 
 
 @app.route('/catalog/item/add', methods=['GET', 'POST'])
 def add_item():
     if not login_session.get('username'):
         return redirect(url_for('index'))
-    categories = session.query(Category)
+    categories = get_all_categories()
     if request.method == 'POST':
         name, description, cat_id, valid_category = extract_form_data()
         if valid_category and name and cat_id:
             item = Item(name=name, cat_id=cat_id, description=description)
-            session.add(item)
-            session.commit()
+            add_item_todb(item)
         return redirect(url_for('index'))
-    return render_template('add.html', categories=categories.all(), STATE=login_session.get('state'), username=login_session.get('username'))
+    return render_template('add.html', categories=categories, STATE=login_session.get('state'), username=login_session.get('username'))
 
 
 @app.route('/catalog/<category>/<item>/edit/')
 def edit_item(category, item):
     if not login_session.get('username'):
         return redirect(url_for('index'))
-    categories = session.query(Category)
-    result = session.query(Category, Item).filter(
-        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
-    current_item = None
-    if result:
-        current_item = result[0][1]
-    else:
+    categories = get_all_categories()
+    current_item = get_item_by_name_and_category(category,item)
+    if not current_item:
         return redirect(url_for('index'))
-
-    return render_template('edit.html', item=current_item, categories=categories.all(), STATE=login_session.get('state'), username=login_session.get('username'))
+    return render_template('edit.html', item=current_item, categories=categories, STATE=login_session.get('state'), username=login_session.get('username'))
 
 
 @app.route('/catalog/item/edit/', methods=['POST'])
 def save_item():
-    if not login_session.get('username'):
-        return redirect(url_for('index'))
-    if request.method == 'GET':
+    if not login_session.get('username') or request.method == 'GET':
         return redirect(url_for('index'))
     id = request.form.get('id')
-    item = session.query(Item).filter(Item.id == id).first()
+    item = get_item_by_id(id)
     if item:
         name, description, cat_id, valid_category = extract_form_data()
         if valid_category and name and cat_id:
             item.name = name
             item.description = description
             item.cat_id = cat_id
-            session.add(item)
-            session.commit()
+            add_item_todb(item)
             return redirect('/catalog/%s/%s/' % (item.cat.name, item.name))
         else:
             return redirect(url_for('index'))
@@ -117,34 +103,88 @@ def extract_form_data():
     name = request.form.get('name')
     description = request.form.get('description')
     cat_id = request.form.get('category')
-    cat = session.query(Category).filter(Category.id == cat_id).first()
+    cat = get_category_by_id(cat_id)
     if cat:
         valid_category = True
 
     return name, description, cat_id, valid_category
 
-
 @app.route('/catalog/<category>/<item>/delete/')
 def delete_item(category, item):
     if not login_session.get('username'):
         return redirect(url_for('index'))
-    categories = session.query(Category)
-    result = session.query(Category, Item).filter(
-        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
-    current_item = None
+    categories = get_all_categories()
+    current_item = get_item_by_name_and_category(category,item)
     message = 'Could not delete item'
-    if result:
-        current_item = result[0][1]
-        session.delete(current_item)
-        session.commit()
+    if current_item:
+        delete_item_fromdb(current_item)
         message = 'Item deleted'
     return render_template('delete.html', categories=categories, STATE=login_session.get('state'), message=message, username=login_session.get('username'))
 
 
+def get_all_categories():
+    return session.query(Category)
+
+
+def get_category_by_name(name):
+    result = session.query(Category).filter(Category.name == name)
+    if result:
+        return result.first()
+    return None
+
+
+def get_category_by_id(id):
+    result = session.query(Category).filter(Category.id == id)
+    if result:
+        return result.first()
+    return None
+
+
+def get_all_items():
+    return session.query(Item)
+
+
+def get_items_by_category(category):
+    result = session.query(Item).filter(
+        Category.name.ilike(category)).filter(Item.cat_id == Category.id)
+    if result:
+        return result.all()
+    return None
+
+
+def get_item_by_id(id):
+    result = session.query(Item).filter(Item.id == id)
+    if result:
+        return result.first()
+    return None
+
+
+def get_item_by_name(name):
+    result = session.query(Item).filter(Item.name.ilike(name))
+    if result:
+        return result.first()
+    return None
+
+
+def get_item_by_name_and_category(category, item):
+    result = session.query(Category, Item).filter(
+        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
+    if result:
+        return result[0][1]
+    return None
+
+def add_item_todb(item):
+    session.add(item)
+    session.commit()
+
+def delete_item_fromdb(item):
+    session.delete(item)
+    session.commit()
+
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
-    if request.args.get('state') != login_session['state']:
+    if request.args.get('state') != login_session.get('state'):
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
