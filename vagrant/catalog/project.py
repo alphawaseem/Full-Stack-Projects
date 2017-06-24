@@ -1,8 +1,4 @@
 from flask import Flask, render_template, request, redirect, make_response, url_for
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Category, Item
-
 from flask import session as login_session
 import random
 import string
@@ -14,10 +10,7 @@ import httplib2
 import json
 import requests
 
-engine = create_engine('postgresql://vagrant:password@localhost:5432/catalogs')
-Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+from dbhelper import *
 
 app = Flask(__name__)
 
@@ -29,7 +22,7 @@ CLIENT_ID = json.loads(
 @app.route('/catalog/')
 def index():
     categories = get_all_categories()
-    items =get_all_items()[0:11]
+    items = get_all_items()[0:11]
     if not login_session.get('state'):
         state = ''.join(random.choice(string.ascii_lowercase +
                                       string.ascii_uppercase + string.digits) for x in range(32))
@@ -49,7 +42,7 @@ def items(category):
 @app.route('/catalog/<category>/<item>/')
 def item(category, item):
     all_categories = get_all_categories()
-    current_item = get_item_by_name_and_category(category,item)
+    current_item = get_item_by_name_and_category(category, item)
     return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session.get('state'))
 
 
@@ -72,7 +65,7 @@ def edit_item(category, item):
     if not login_session.get('username'):
         return redirect(url_for('index'))
     categories = get_all_categories()
-    current_item = get_item_by_name_and_category(category,item)
+    current_item = get_item_by_name_and_category(category, item)
     if not current_item:
         return redirect(url_for('index'))
     return render_template('edit.html', item=current_item, categories=categories, STATE=login_session.get('state'), username=login_session.get('username'))
@@ -109,77 +102,19 @@ def extract_form_data():
 
     return name, description, cat_id, valid_category
 
+
 @app.route('/catalog/<category>/<item>/delete/')
 def delete_item(category, item):
     if not login_session.get('username'):
         return redirect(url_for('index'))
     categories = get_all_categories()
-    current_item = get_item_by_name_and_category(category,item)
+    current_item = get_item_by_name_and_category(category, item)
     message = 'Could not delete item'
     if current_item:
         delete_item_fromdb(current_item)
         message = 'Item deleted'
     return render_template('delete.html', categories=categories, STATE=login_session.get('state'), message=message, username=login_session.get('username'))
 
-
-def get_all_categories():
-    return session.query(Category)
-
-
-def get_category_by_name(name):
-    result = session.query(Category).filter(Category.name == name)
-    if result:
-        return result.first()
-    return None
-
-
-def get_category_by_id(id):
-    result = session.query(Category).filter(Category.id == id)
-    if result:
-        return result.first()
-    return None
-
-
-def get_all_items():
-    return session.query(Item)
-
-
-def get_items_by_category(category):
-    result = session.query(Item).filter(
-        Category.name.ilike(category)).filter(Item.cat_id == Category.id)
-    if result:
-        return result.all()
-    return None
-
-
-def get_item_by_id(id):
-    result = session.query(Item).filter(Item.id == id)
-    if result:
-        return result.first()
-    return None
-
-
-def get_item_by_name(name):
-    result = session.query(Item).filter(Item.name.ilike(name))
-    if result:
-        return result.first()
-    return None
-
-
-def get_item_by_name_and_category(category, item):
-    result = session.query(Category, Item).filter(
-        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
-    if result:
-        return result[0][1]
-    return None
-
-def add_item_todb(item):
-    session.add(item)
-    session.commit()
-
-def delete_item_fromdb(item):
-    session.delete(item)
-    session.commit()
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
