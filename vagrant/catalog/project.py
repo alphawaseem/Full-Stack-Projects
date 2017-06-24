@@ -1,7 +1,11 @@
-from flask import Flask, render_template, request, redirect, make_response, url_for, jsonify
+from flask import Flask, render_template, request
+from flask import redirect, make_response, url_for, jsonify
 from flask import session as login_session
 import random
 import string
+from functools import wraps
+
+
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
@@ -17,6 +21,14 @@ app = Flask(__name__)
 CLIENT_ID = json.loads(
     open('client_secret.json', 'r').read())['web']['client_id']
 
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not login_session.get('username'):
+            return redirect(url_for('index'))
+        return f(*args,**kwargs)
+    return decorated_function
 
 #### PUBLIC ROUTES ####
 
@@ -99,13 +111,9 @@ def fullJson():
 #### PROTECTED ROUTED ####
 
 @app.route('/catalog/item/add', methods=['GET', 'POST'])
+@login_required
 def add_item():
     '''This route lets the logged in user to add item to the catalog'''
-
-    # Check if username if present in login_session i.e user is logged in. If
-    # not then redirect to home
-    if not login_session.get('username'):
-        return redirect(url_for('index'))
 
     categories = get_all_categories()
 
@@ -128,13 +136,9 @@ def add_item():
 
 
 @app.route('/catalog/<category>/<item>/edit/')
+@login_required
 def edit_item(category, item):
     '''This route lets the logged in user edit the item'''
-
-    # Check if username if present in login_session i.e user is logged in. If
-    # not then redirect to home
-    if not login_session.get('username'):
-        return redirect(url_for('index'))
 
     categories = get_all_categories()
     current_item = get_item_by_name_and_category(category, item)
@@ -150,13 +154,9 @@ def edit_item(category, item):
 
 
 @app.route('/catalog/item/edit/', methods=['POST'])
+@login_required
 def save_item():
     '''This route saves the edited item data recieved from above route'''
-
-    # Check if username if present in login_session i.e user is logged in. If
-    # not then redirect to home
-    if not login_session.get('username') or request.method == 'GET':
-        return redirect(url_for('index'))
 
     # Get the id from the hidden input field
     id = request.form.get('id')
@@ -183,12 +183,8 @@ def save_item():
 
 
 @app.route('/catalog/<category>/<item>/delete/')
+@login_required
 def delete_item(category, item):
-
-    # Check if username if present in login_session i.e user is logged in. If
-    # not then redirect to home
-    if not login_session.get('username'):
-        return redirect(url_for('index'))
 
     categories = get_all_categories()
     current_item = get_item_by_name_and_category(category, item)
@@ -314,7 +310,8 @@ def logout():
             'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' \
+        % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print('result is ')
@@ -342,6 +339,8 @@ def extract_form_data():
     cat_id = request.form.get('category')
 
     return name, description, cat_id
+
+
 
 
 if __name__ == '__main__':
