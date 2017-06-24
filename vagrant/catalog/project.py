@@ -18,20 +18,33 @@ CLIENT_ID = json.loads(
     open('client_secret.json', 'r').read())['web']['client_id']
 
 
+#### PUBLIC ROUTES ####
+
 @app.route('/')
 @app.route('/catalog/')
 def index():
+    ''' Route for index and catalog
+        Displays all categories and top 10 catalog items
+    '''
+
+    # Get all categories and top 10 items
     categories = get_all_categories()
     items = get_all_items()[0:11]
+
+    # Check if state variable is defined if not then define and store in
+    # login_session
     if not login_session.get('state'):
         state = ''.join(random.choice(string.ascii_lowercase +
                                       string.ascii_uppercase + string.digits) for x in range(32))
         login_session['state'] = state
+
+    # Render template
     return render_template('catalog.html', username=login_session.get('username'), categories=categories, items=items, STATE=login_session.get('state'))
 
 
 @app.route('/catalog/<category>/items/')
 def items(category):
+    ''' This route displays all the items in the given category'''
 
     items = get_items_by_category(category)
     allCat = get_all_categories()
@@ -41,16 +54,28 @@ def items(category):
 
 @app.route('/catalog/<category>/<item>/')
 def item(category, item):
+    '''This route displays the item in the category specified in the url'''
+
     all_categories = get_all_categories()
     current_item = get_item_by_name_and_category(category, item)
+
     return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session.get('state'))
 
 
+#### PROTECTED ROUTED ####
+
 @app.route('/catalog/item/add', methods=['GET', 'POST'])
 def add_item():
+    '''This route lets the logged in user to add item to the catalog'''
+
+    # Check if username if present in login_session i.e user is logged in. If
+    # not then redirect to home
     if not login_session.get('username'):
         return redirect(url_for('index'))
+
     categories = get_all_categories()
+
+    # If request was post method then extract form data, and add item to db
     if request.method == 'POST':
         name, description, cat_id, valid_category = extract_form_data()
         if valid_category and name and cat_id:
@@ -62,10 +87,16 @@ def add_item():
 
 @app.route('/catalog/<category>/<item>/edit/')
 def edit_item(category, item):
+    '''This route lets the logged in user edit the item'''
+
+    # Check if username if present in login_session i.e user is logged in. If
+    # not then redirect to home
     if not login_session.get('username'):
         return redirect(url_for('index'))
+
     categories = get_all_categories()
     current_item = get_item_by_name_and_category(category, item)
+
     if not current_item:
         return redirect(url_for('index'))
     return render_template('edit.html', item=current_item, categories=categories, STATE=login_session.get('state'), username=login_session.get('username'))
@@ -73,10 +104,19 @@ def edit_item(category, item):
 
 @app.route('/catalog/item/edit/', methods=['POST'])
 def save_item():
+    '''This route saves the edited item data recieved from above route'''
+
+    # Check if username if present in login_session i.e user is logged in. If
+    # not then redirect to home
     if not login_session.get('username') or request.method == 'GET':
         return redirect(url_for('index'))
+
+    # Get the id from the hidden input field
     id = request.form.get('id')
+    # Retrive the item
     item = get_item_by_id(id)
+
+    # If item is found then extract form data and update the item
     if item:
         name, description, cat_id, valid_category = extract_form_data()
         if valid_category and name and cat_id:
@@ -91,33 +131,37 @@ def save_item():
         return redirect(url_for('index'))
 
 
-def extract_form_data():
-    valid_category = False
-    name = request.form.get('name')
-    description = request.form.get('description')
-    cat_id = request.form.get('category')
-    cat = get_category_by_id(cat_id)
-    if cat:
-        valid_category = True
-
-    return name, description, cat_id, valid_category
-
-
 @app.route('/catalog/<category>/<item>/delete/')
 def delete_item(category, item):
+
+    # Check if username if present in login_session i.e user is logged in. If
+    # not then redirect to home
     if not login_session.get('username'):
         return redirect(url_for('index'))
+
     categories = get_all_categories()
     current_item = get_item_by_name_and_category(category, item)
-    message = 'Could not delete item'
+
+    message = 'Could not delete item'  # set default message
+
+    # if item is found then delete
     if current_item:
         delete_item_fromdb(current_item)
-        message = 'Item deleted'
+        message = 'Item deleted'  # update message
+
     return render_template('delete.html', categories=categories, STATE=login_session.get('state'), message=message, username=login_session.get('username'))
 
 
+#### GOOGLE ACCOUNTS OAUTH LOGIN AND LOGOUT ####
+
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    '''
+    This route sign in the user using google oauth provider
+    This code is copied from google starter project
+    and have been modified to suite this projects needs.
+    '''
+
     # Validate state token
     if request.args.get('state') != login_session.get('state'):
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -199,6 +243,11 @@ def gconnect():
 
 @app.route('/logout/')
 def logout():
+    '''
+    This route logouts the logged in user.
+    This code is copied from google starter project
+    and have been modified to suite this projects needs.
+    '''
     access_token = login_session.get('access_token')
     print('In gdisconnect access token is %s', access_token)
     print('User name is: ')
@@ -226,6 +275,21 @@ def logout():
             'Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
+
+
+#### HELPER FUNCTIONS ####
+
+def extract_form_data():
+    ''''Helper function which extracts form data required to add item'''
+    valid_category = False
+    name = request.form.get('name')
+    description = request.form.get('description')
+    cat_id = request.form.get('category')
+    cat = get_category_by_id(cat_id)
+    if cat:
+        valid_category = True
+
+    return name, description, cat_id, valid_category
 
 
 if __name__ == '__main__':
