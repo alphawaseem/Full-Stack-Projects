@@ -107,6 +107,47 @@ def fullJson():
     ]}
     return jsonify(json)
 
+@app.route('/catalog/categories/json/')
+def categories_json():
+    categories = get_all_categories()
+    if not categories:
+        return jsonify( Error = 'Nothing found by given parameters')
+    return jsonify( Categories = [c.serialize for c in categories] )
+
+@app.route('/catalog/<category>/json/')
+def category_json(category):
+    cat = get_category_by_name(category)
+    if not cat:
+        return jsonify( Error = 'Nothing found by given parameters')
+    return jsonify(Category = cat.serialize)
+
+@app.route('/catalog/<category>/items/json/')
+def items_by_cat_json(category):
+    items = get_items_by_category(category)
+    if not items:
+        return jsonify( Error = 'Nothing found by given parameters')
+    return jsonify(Items = [ item.serialize for item in items])
+
+@app.route('/catalog/<category>/<item>/json/')
+def item_by_name_cat_json(category,item):
+    item = get_item_by_name_and_category(category,item)
+    if not item:
+        return jsonify( Error = 'Nothing found by given parameters')
+    return jsonify(Item = item.serialize)
+
+@app.route('/catalog/category/<id>/json/')
+def category_id_json(id):
+    cat = get_category_by_id(id)
+    if not cat:
+        return jsonify( Error = 'Nothing found by given parameters')
+    return jsonify(Category = cat.serialize)
+
+@app.route('/catalog/item/<id>/json/')
+def item_id_json(id):
+    item = get_item_by_id(id)
+    if not item:
+        return jsonify( Error = 'Nothing found by given parameters')
+    return jsonify(Item = item.serialize)
 
 #### PROTECTED ROUTED ####
 

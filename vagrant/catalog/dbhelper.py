@@ -18,7 +18,7 @@ def get_all_categories():
 
 
 def get_category_by_name(name):
-    result = session.query(Category).filter(Category.name == name)
+    result = session.query(Category).filter(Category.name.ilike(name))
     if result:
         return result.first()
     return None
