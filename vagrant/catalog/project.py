@@ -29,7 +29,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-#### PUBLIC ROUTES ####
+# PUBLIC ROUTES ####
 
 
 @app.route('/')
@@ -94,7 +94,7 @@ def item(category, item):
         STATE=login_session.get('state'))
 
 
-#### JSON ENDPOINTS ####
+# JSON ENDPOINTS ####
 @app.route('/catalog/json/')
 def fullJson():
     categories = get_all_categories()
@@ -155,7 +155,7 @@ def item_id_json(id):
         return jsonify(Error='Nothing found by given parameters')
     return jsonify(Item=item.serialize)
 
-#### PROTECTED ROUTED ####
+# PROTECTED ROUTED ####
 
 
 @app.route('/catalog/item/add', methods=['GET', 'POST'])
@@ -261,7 +261,7 @@ def delete_item(category, item):
         username=login_session.get('username'))
 
 
-#### GOOGLE ACCOUNTS OAUTH LOGIN AND LOGOUT ####
+# GOOGLE ACCOUNTS OAUTH LOGIN AND LOGOUT ####
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
@@ -387,7 +387,7 @@ def logout():
         return response
 
 
-#### HELPER FUNCTIONS ####
+# HELPER FUNCTIONS ####
 
 def extract_form_data():
     ''''Helper function which extracts form data required to add item'''
@@ -397,12 +397,14 @@ def extract_form_data():
 
     return name, description, cat_id
 
+
 @app.context_processor
 def utility_processor():
     def belongs_to_user(item):
         return item_belongs_to_user(item)
-    return dict(item_belongs_to_user = belongs_to_user)
-    
+    return dict(item_belongs_to_user=belongs_to_user)
+
+
 def item_belongs_to_user(item):
     return item.owner == login_session.get('email')
 
