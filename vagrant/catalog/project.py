@@ -226,12 +226,12 @@ def logout():
     result = h.request(url, 'GET')[0]
     print('result is ')
     print(result)
+    del login_session['access_token']
+    del login_session['gplus_id']
+    del login_session['username']
+    del login_session['email']
+    del login_session['picture']
     if result['status'] == '200':
-        del login_session['access_token']
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
         return redirect(url_for('index'))
     else:
         response = make_response(json.dumps(
