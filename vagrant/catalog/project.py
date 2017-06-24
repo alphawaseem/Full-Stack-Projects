@@ -34,12 +34,20 @@ def index():
     # Check if state variable is defined if not then define and store in
     # login_session
     if not login_session.get('state'):
-        state = ''.join(random.choice(string.ascii_lowercase +
-                                      string.ascii_uppercase + string.digits) for x in range(32))
+        state = ''.join(
+            random.choice(
+                string.ascii_lowercase +
+                string.ascii_uppercase +
+                string.digits) for x in range(32))
         login_session['state'] = state
 
     # Render template
-    return render_template('catalog.html', username=login_session.get('username'), categories=categories, items=items, STATE=login_session.get('state'))
+    return render_template(
+        'catalog.html',
+        username=login_session.get('username'),
+        categories=categories,
+        items=items,
+        STATE=login_session.get('state'))
 
 
 @app.route('/catalog/<category>/items/')
@@ -49,7 +57,13 @@ def items(category):
     items = get_items_by_category(category)
     allCat = get_all_categories()
 
-    return render_template('catalog.html', categories=allCat, username=login_session.get('username'), items=items, tittle=category, STATE=login_session.get('state'))
+    return render_template(
+        'catalog.html',
+        categories=allCat,
+        username=login_session.get('username'),
+        items=items,
+        tittle=category,
+        STATE=login_session.get('state'))
 
 
 @app.route('/catalog/<category>/<item>/')
@@ -59,7 +73,13 @@ def item(category, item):
     all_categories = get_all_categories()
     current_item = get_item_by_name_and_category(category, item)
 
-    return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session.get('state'))
+    return render_template(
+        'item.html',
+        categories=all_categories,
+        current_item=current_item,
+        username=login_session.get('username'),
+        title=item,
+        STATE=login_session.get('state'))
 
 
 #### JSON ENDPOINTS ####
@@ -100,7 +120,11 @@ def add_item():
             item = Item(name=name, cat_id=cat_id, description=description)
             add_item_todb(item)
         return redirect(url_for('index'))
-    return render_template('add.html', categories=categories, STATE=login_session.get('state'), username=login_session.get('username'))
+    return render_template(
+        'add.html',
+        categories=categories,
+        STATE=login_session.get('state'),
+        username=login_session.get('username'))
 
 
 @app.route('/catalog/<category>/<item>/edit/')
@@ -117,7 +141,12 @@ def edit_item(category, item):
 
     if not current_item:
         return redirect(url_for('index'))
-    return render_template('edit.html', item=current_item, categories=categories, STATE=login_session.get('state'), username=login_session.get('username'))
+    return render_template(
+        'edit.html',
+        item=current_item,
+        categories=categories,
+        STATE=login_session.get('state'),
+        username=login_session.get('username'))
 
 
 @app.route('/catalog/item/edit/', methods=['POST'])
@@ -171,7 +200,12 @@ def delete_item(category, item):
         delete_item_fromdb(current_item)
         message = 'Item deleted'  # update message
 
-    return render_template('delete.html', categories=categories, STATE=login_session.get('state'), message=message, username=login_session.get('username'))
+    return render_template(
+        'delete.html',
+        categories=categories,
+        STATE=login_session.get('state'),
+        message=message,
+        username=login_session.get('username'))
 
 
 #### GOOGLE ACCOUNTS OAUTH LOGIN AND LOGOUT ####
@@ -234,8 +268,8 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+            json.dumps('Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -308,6 +342,7 @@ def extract_form_data():
     cat_id = request.form.get('category')
 
     return name, description, cat_id
+
 
 if __name__ == '__main__':
     app.debug = True
