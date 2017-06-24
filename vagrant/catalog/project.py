@@ -6,7 +6,6 @@ import string
 from functools import wraps
 
 
-
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 from oauth2client.client import OAuth2Credentials
@@ -27,10 +26,11 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if not login_session.get('username'):
             return redirect(url_for('index'))
-        return f(*args,**kwargs)
+        return f(*args, **kwargs)
     return decorated_function
 
 #### PUBLIC ROUTES ####
+
 
 @app.route('/')
 @app.route('/catalog/')
@@ -107,49 +107,56 @@ def fullJson():
     ]}
     return jsonify(json)
 
+
 @app.route('/catalog/categories/json/')
 def categories_json():
     categories = get_all_categories()
     if not categories:
-        return jsonify( Error = 'Nothing found by given parameters')
-    return jsonify( Categories = [c.serialize for c in categories] )
+        return jsonify(Error='Nothing found by given parameters')
+    return jsonify(Categories=[c.serialize for c in categories])
+
 
 @app.route('/catalog/<category>/json/')
 def category_json(category):
     cat = get_category_by_name(category)
     if not cat:
-        return jsonify( Error = 'Nothing found by given parameters')
-    return jsonify(Category = cat.serialize)
+        return jsonify(Error='Nothing found by given parameters')
+    return jsonify(Category=cat.serialize)
+
 
 @app.route('/catalog/<category>/items/json/')
 def items_by_cat_json(category):
     items = get_items_by_category(category)
     if not items:
-        return jsonify( Error = 'Nothing found by given parameters')
-    return jsonify(Items = [ item.serialize for item in items])
+        return jsonify(Error='Nothing found by given parameters')
+    return jsonify(Items=[item.serialize for item in items])
+
 
 @app.route('/catalog/<category>/<item>/json/')
-def item_by_name_cat_json(category,item):
-    item = get_item_by_name_and_category(category,item)
+def item_by_name_cat_json(category, item):
+    item = get_item_by_name_and_category(category, item)
     if not item:
-        return jsonify( Error = 'Nothing found by given parameters')
-    return jsonify(Item = item.serialize)
+        return jsonify(Error='Nothing found by given parameters')
+    return jsonify(Item=item.serialize)
+
 
 @app.route('/catalog/category/<id>/json/')
 def category_id_json(id):
     cat = get_category_by_id(id)
     if not cat:
-        return jsonify( Error = 'Nothing found by given parameters')
-    return jsonify(Category = cat.serialize)
+        return jsonify(Error='Nothing found by given parameters')
+    return jsonify(Category=cat.serialize)
+
 
 @app.route('/catalog/item/<id>/json/')
 def item_id_json(id):
     item = get_item_by_id(id)
     if not item:
-        return jsonify( Error = 'Nothing found by given parameters')
-    return jsonify(Item = item.serialize)
+        return jsonify(Error='Nothing found by given parameters')
+    return jsonify(Item=item.serialize)
 
 #### PROTECTED ROUTED ####
+
 
 @app.route('/catalog/item/add', methods=['GET', 'POST'])
 @login_required
@@ -165,8 +172,10 @@ def add_item():
         # Check if name, cat_id are not empty and also check if category exists
         # before adding/editing
         cat = get_category_by_id(cat_id)
-        if cat and name and cat_id:
-            item = Item(name=name, cat_id=cat_id, description=description)
+        user = login_session.get('email')
+        if cat and name and cat_id and user:
+            item = Item(name=name, cat_id=cat_id,
+                        description=description, owner=user)
             add_item_todb(item)
         return redirect(url_for('index'))
     return render_template(
@@ -186,6 +195,9 @@ def edit_item(category, item):
 
     if not current_item:
         return redirect(url_for('index'))
+    if not item_belongs_to_user(current_item):
+        return redirect('/catalog/%s/%s/' % (category, item))
+
     return render_template(
         'edit.html',
         item=current_item,
@@ -206,6 +218,8 @@ def save_item():
 
     # If item is found then extract form data and update the item
     if item:
+        if not item_belongs_to_user(item):
+            return redirect(url_for('index'))
         name, description, cat_id = extract_form_data()
 
         # Check if name, cat_id are not empty and also check if category exists
@@ -234,6 +248,8 @@ def delete_item(category, item):
 
     # if item is found then delete
     if current_item:
+        if not item_belongs_to_user(current_item):
+            return redirect('/catalog/%s/%s/' % (category, item))
         delete_item_fromdb(current_item)
         message = 'Item deleted'  # update message
 
@@ -381,7 +397,14 @@ def extract_form_data():
 
     return name, description, cat_id
 
-
+@app.context_processor
+def utility_processor():
+    def belongs_to_user(item):
+        return item_belongs_to_user(item)
+    return dict(item_belongs_to_user = belongs_to_user)
+    
+def item_belongs_to_user(item):
+    return item.owner == login_session.get('email')
 
 
 if __name__ == '__main__':

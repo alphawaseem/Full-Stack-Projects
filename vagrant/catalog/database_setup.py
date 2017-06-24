@@ -28,6 +28,7 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     description = Column(String(250))
     cat_id = Column(Integer, ForeignKey('categories.id'))
+    owner = Column(String(36),nullable=False)
     cat = relationship(Category)
 
     @property
