@@ -123,10 +123,20 @@ def extract_form_data():
     return name, description, cat_id,valid_category
     
 
-@app.route('/catalog/<category>/<item>/delete')
-def delete_item():
-    return 'Delete an item'
-
+@app.route('/catalog/<category>/<item>/delete/')
+def delete_item(category,item):
+    if not login_session.get('username'):
+        return redirect(url_for('index'))
+    categories = session.query(Category)
+    result = session.query(Category, Item).filter(
+        Category.name.ilike(category)).filter(Item.name.ilike(item)).all()
+    current_item = None
+    message = 'Could not delete item'
+    if result:
+        current_item = result[0][1]
+        session.delete(current_item)
+        message = 'Item deleted'
+    return render_template('delete.html',STATE= login_session.get('state'), message = message, username = login_session.get('username'))
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():

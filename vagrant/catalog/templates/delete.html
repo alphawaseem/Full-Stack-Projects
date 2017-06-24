@@ -1,0 +1,19 @@
+{% extends "base.html" %} {% block title %}Catalog - {{title if title else 'Index'}}{% endblock %} {% block head %} {{ super() }} {% endblock %} {% block main %}
+
+<div class="fc">
+    <div class="category">
+        <h3>Categories</h3>
+        <div class="fc">
+            {% for cat in categories %}
+            <a class=box href="/catalog/{{cat.name}}/items">
+                {{cat.name}}
+            </a> {% endfor %}
+        </div>
+    </div>
+    <div class="center">
+
+        <h2>{{message}}</h2>
+    </div>
+</div>
+
+{% endblock %}
