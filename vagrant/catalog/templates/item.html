@@ -20,7 +20,7 @@
         <h3> Item Not Found</h3>
         {% endif %} {% if username %}
         <div class="edit-delete fc">
-            <span class="box">Edit</span> <span class="box">Delete</span>
+            <a href="/catalog/{{current_item.cat.name}}/{{current_item.name}}/edit" class="box">Edit</a> <span class="box">Delete</span>
         </div>
         {% endif %}
     </div>
