@@ -18,7 +18,7 @@
         </div>
         {% else %}
         <h3> Item Not Found</h3>
-        {% endif %} {% if username %}
+        {% endif %} {% if username and current_item %}
         <div class="edit-delete fc">
             <a href="/catalog/{{current_item.cat.name}}/{{current_item.name}}/edit" class="box">Edit</a> <a href="/catalog/{{current_item.cat.name}}/{{current_item.name}}/delete" class="box">Delete</a>
         </div>
