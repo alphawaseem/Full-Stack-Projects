@@ -63,7 +63,7 @@ def item(category, item):
 
 
 #### JSON ENDPOINTS ####
-@app.route('/catalog/json')
+@app.route('/catalog/json/')
 def fullJson():
     categories = get_all_categories()
     items = get_all_items()
