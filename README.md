@@ -21,6 +21,14 @@
 7. Make sure you have all the dependencies stated above.If not then install them.
 8. Then type python project.py
 9. Open the following url http://0.0.0.0:5000/ in your browser.
-10. For json endpoint visit http://0.0.0.0:5000/catalog/json/
+
+## JSON Endpoints
+1. /catalog/json/
+2. /catalog/categories/json/
+3. /catalog/<category>/json/
+4. /catalog/<category>/items/json/
+5. /catalog/<category>/<item>/json/
+6. /catalog/category/<id>/json/
+7. /catalog/item/<id>/json/
 
 Common code for the Relational Databases and Full Stack Fundamentals courses
