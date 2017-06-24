@@ -1,3 +1,7 @@
+'''
+This module initializes the database session and defines some helper functions
+
+'''
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, Item
@@ -7,6 +11,8 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
+#### HELPER FUNCTIONS TO INTERACT WITH DB ####
 def get_all_categories():
     return session.query(Category)
 
@@ -58,9 +64,11 @@ def get_item_by_name_and_category(category, item):
         return result[0][1]
     return None
 
+
 def add_item_todb(item):
     session.add(item)
     session.commit()
+
 
 def delete_item_fromdb(item):
     session.delete(item)
