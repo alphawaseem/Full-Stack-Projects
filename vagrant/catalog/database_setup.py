@@ -14,6 +14,13 @@ class Category(Base):
     name = Column(String(25), nullable=False)
     id = Column(Integer, primary_key=True)
 
+    @property
+    def serialize(self):
+        return {
+            'name' : self.name,
+            'id' : self.id
+        }
+
 
 class Item(Base):
     __tablename__ = 'items'
@@ -23,6 +30,14 @@ class Item(Base):
     cat_id = Column(Integer, ForeignKey('categories.id'))
     cat = relationship(Category)
 
+    @property
+    def serialize(self):
+        return {
+            'id' : self.id,
+            'name': self.name,
+            'description' : self.description,
+            'cat_id' : self.cat_id
+        }
 
 engine = create_engine(
     'postgresql://vagrant:password@localhost:5432/catalogs'

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, make_response, url_for
+from flask import Flask, render_template, request, redirect, make_response, url_for, jsonify
 from flask import session as login_session
 import random
 import string
@@ -62,6 +62,20 @@ def item(category, item):
     return render_template('item.html', categories=all_categories, current_item=current_item, username=login_session.get('username'), title=item, STATE=login_session.get('state'))
 
 
+#### JSON ENDPOINTS ####
+@app.route('/catalog/json')
+def fullJson():
+    categories = get_all_categories()
+    items = get_all_items()
+    json = {"Category": [
+
+        {"id": c.id, "name": c.name, "Items": [
+            i.serialize for i in items if i.cat_id == c.id
+        ]} for c in categories
+    ]}
+    return jsonify(json)
+
+
 #### PROTECTED ROUTED ####
 
 @app.route('/catalog/item/add', methods=['GET', 'POST'])
@@ -78,7 +92,7 @@ def add_item():
     # If request was post method then extract form data, and add item to db
     if request.method == 'POST':
         name, description, cat_id = extract_form_data()
-        
+
         # Check if name, cat_id are not empty and also check if category exists
         # before adding/editing
         cat = get_category_by_id(cat_id)
